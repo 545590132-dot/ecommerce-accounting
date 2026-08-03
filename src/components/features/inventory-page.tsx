@@ -278,9 +278,8 @@ export default function InventoryPage() {
       // 计算 displaySalesStatus
       const displaySalesStatus: '清货' | '热销' | '正常' | '平销' = (v.salesStatus === '清货' ? '清货' : (monthlySales >= 500 ? '热销' : (estimatedMonths !== null && estimatedMonths > 0 && estimatedMonths <= 6 ? '正常' : '平销'))) as '清货' | '热销' | '正常' | '平销';
 
-      // 筛选
+      // 筛选（月份、负责人、零库存）- 销售情况筛选移到合并后
       if (yearMonthFilter.length > 0 && !yearMonthFilter.includes(v.yearMonth)) continue;
-      if (statusFilter.length > 0 && !statusFilter.includes(displaySalesStatus)) continue;
       if (ownerFilter.length > 0 && !ownerFilter.includes(productOwner)) continue;
       if (hideZeroStock && v.stockQty === 0) continue;
 
@@ -393,8 +392,14 @@ export default function InventoryPage() {
       });
     }
 
-    // 隐藏库存为0的商品
-    const filtered = hideZeroStock ? mergedRows.filter(r => r.stock > 0) : mergedRows;
+    // 隐藏库存为0的商品 + 销售情况筛选（合并后）
+    let filtered = mergedRows;
+    if (statusFilter.length > 0) {
+      filtered = filtered.filter(r => r.displaySalesStatus && statusFilter.includes(r.displaySalesStatus));
+    }
+    if (hideZeroStock) {
+      filtered = filtered.filter(r => r.stock > 0);
+    }
 
     // DEBUG: 合并和筛选后校验
     const mergedTotal = mergedRows.reduce((s, r) => s + r.stock, 0);
