@@ -1,0 +1,42 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+env:
+  SUPABASE_URL: https://br-stoic-nene-93430d30.supabase2.aidap-global.cn-beijing.volces.com
+  SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjMzNjA4OTkxNzAsInJvbGUiOiJhbm9uIn0.yy7QBc4USJh64xuCcPIb4tSWlwGOHw5SNiJDZhFpPII
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping sku_mappings table
+        run: |
+          http_code=$(curl -s -o /tmp/r1.json -w "%{http_code}" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${SUPABASE_URL}/rest/v1/sku_mappings?select=id&limit=1")
+          echo "sku_mappings HTTP: ${http_code}"
+          [ "${http_code}" = "200" ] || exit 1
+
+      - name: Ping inventory_records table
+        run: |
+          http_code=$(curl -s -o /tmp/r2.json -w "%{http_code}" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${SUPABASE_URL}/rest/v1/inventory_records?select=id&limit=1")
+          echo "inventory_records HTTP: ${http_code}"
+          [ "${http_code}" = "200" ] || exit 1
+
+      - name: Ping inventory_files table
+        run: |
+          http_code=$(curl -s -o /tmp/r3.json -w "%{http_code}" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${SUPABASE_URL}/rest/v1/inventory_files?select=id&limit=1")
+          echo "inventory_files HTTP: ${http_code}"
+          [ "${http_code}" = "200" ] || exit 1
+          echo "✓ Supabase 项目活跃，7天倒计时已重置"
